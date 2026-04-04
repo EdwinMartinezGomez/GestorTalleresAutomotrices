@@ -1,21 +1,39 @@
+import os
+import sys
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
+import uvicorn
+
+# Permite ejecutar este archivo directamente sin perder el contexto del paquete.
+if __package__ is None or __package__ == "":
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
 from app.api.routes import api_router
+from app.core.database import engine
 from app.core.config import get_settings
 from app.core.security import KeycloakAuthMiddleware, keycloak_oidc
+from app.entities.base import Base
+from app.entities import models  # noqa: F401
 
 settings = get_settings()
 
-app = FastAPI(title=settings.APP_NAME)
-
-
-@app.on_event("startup")
-async def startup_event() -> None:
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # Crea tablas base si no existen (entornos locales sin script SQL).
+    Base.metadata.create_all(bind=engine)
     try:
         await keycloak_oidc.discover()
     except Exception as exc:
         print(f"No se pudo inicializar Keycloak al iniciar: {exc}")
+    yield
+
+
+app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
 
 app.add_middleware(
@@ -30,3 +48,7 @@ def health() -> JSONResponse:
 
 
 app.include_router(api_router)
+
+
+if __name__ == "__main__":
+    uvicorn.run("app.main:app", host=settings.APP_HOST, port=settings.APP_PORT, reload=False)

@@ -36,16 +36,22 @@ class KeycloakOIDC:
         self.token_endpoint = data["token_endpoint"]
 
     def _decode_token_sync(self, token: str) -> dict[str, Any]:
-        return self.client.decode_token(
-            token,
-            key=self.client.public_key(),
-            options={
-                "verify_signature": True,
-                "verify_exp": True,
-                "verify_aud": bool(settings.KEYCLOAK_AUDIENCE),
-            },
-            audience=settings.KEYCLOAK_AUDIENCE,
-        )
+        payload = self.client.decode_token(token)
+
+        expected_aud = settings.KEYCLOAK_AUDIENCE
+        if expected_aud:
+            token_aud = payload.get("aud")
+            if isinstance(token_aud, str):
+                token_aud_values = {token_aud}
+            elif isinstance(token_aud, list):
+                token_aud_values = set(token_aud)
+            else:
+                token_aud_values = set()
+
+            if expected_aud not in token_aud_values:
+                raise ValueError("Token audience invalida")
+
+        return payload
 
     async def verify_token(self, token: str) -> dict[str, Any]:
         if not self.issuer:
