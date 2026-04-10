@@ -9,13 +9,13 @@ from app.services.vehiculos_service import VehiculosService
 router = APIRouter()
 
 
-@router.get("", response_model=list[VehiculoResponse])
+@router.get("", response_model=list[VehiculoResponse], dependencies=[Depends(require_roles("admin", "recepcionista"))])
 def list_vehiculos(db: DbSession):
     service = VehiculosService(VehiculosRepository(db))
     return service.list()
 
 
-@router.get("/{placa}", response_model=VehiculoResponse)
+@router.get("/{placa}", response_model=VehiculoResponse, dependencies=[Depends(require_roles("admin", "recepcionista"))])
 def get_vehiculo(placa: str, db: DbSession):
     service = VehiculosService(VehiculosRepository(db))
     return service.get(placa)

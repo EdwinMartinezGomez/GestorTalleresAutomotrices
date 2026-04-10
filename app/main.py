@@ -16,6 +16,8 @@ if __package__ is None or __package__ == "":
 from app.api.routes import api_router
 from app.core.database import engine
 from app.core.config import get_settings
+from app.core.kafka_events import event_publisher
+from app.core.kafka_metrics import kafka_metrics_consumer
 from app.core.security import KeycloakAuthMiddleware, keycloak_oidc
 from app.entities.base import Base
 from app.entities import models  # noqa: F401
@@ -30,7 +32,10 @@ async def lifespan(_: FastAPI):
         await keycloak_oidc.discover()
     except Exception as exc:
         print(f"No se pudo inicializar Keycloak al iniciar: {exc}")
+    kafka_metrics_consumer.start()
     yield
+    kafka_metrics_consumer.stop()
+    event_publisher.close()
 
 
 app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)

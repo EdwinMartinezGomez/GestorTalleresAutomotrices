@@ -85,8 +85,11 @@ keycloak_oidc = KeycloakOIDC()
 
 
 def extract_roles(payload: dict[str, Any]) -> set[str]:
-    realm_roles = set(payload.get("realm_access", {}).get("roles", []))
-    client_roles = set(payload.get("resource_access", {}).get(settings.KEYCLOAK_CLIENT_ID, {}).get("roles", []))
+    realm_roles = {str(role).lower() for role in payload.get("realm_access", {}).get("roles", [])}
+    client_roles = {
+        str(role).lower()
+        for role in payload.get("resource_access", {}).get(settings.KEYCLOAK_CLIENT_ID, {}).get("roles", [])
+    }
     return realm_roles.union(client_roles)
 
 
@@ -124,7 +127,8 @@ class KeycloakAuthMiddleware(BaseHTTPMiddleware):
 def require_roles(*required_roles: str) -> Callable:
     def checker(request: Request) -> None:
         user_roles = getattr(request.state, "roles", set())
-        if required_roles and not set(required_roles).intersection(user_roles):
+        normalized_required = {str(role).lower() for role in required_roles}
+        if normalized_required and not normalized_required.intersection(user_roles):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No autorizado para este recurso")
 
     return checker

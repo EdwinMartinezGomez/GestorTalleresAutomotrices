@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 
+from app.core.kafka_events import publish_domain_event
 from app.repositories.inventario_repository import InventarioRepository
 
 
@@ -17,15 +18,39 @@ class InventarioService:
         return item
 
     def create(self, payload: dict):
-        return self.repository.create(payload)
+        item = self.repository.create(payload)
+        publish_domain_event(
+            topic_suffix="inventario",
+            event_type="repuesto_creado",
+            payload={
+                "repuesto_id": item.id,
+                "nombre_repuesto": item.nombre_repuesto,
+                "stock_actual": item.stock_actual,
+            },
+        )
+        return item
 
     def update(self, repuesto_id: int, payload: dict):
         item = self.get(repuesto_id)
-        return self.repository.update(item, payload)
+        updated = self.repository.update(item, payload)
+        publish_domain_event(
+            topic_suffix="inventario",
+            event_type="repuesto_actualizado",
+            payload={
+                "repuesto_id": updated.id,
+                "campos_actualizados": list(payload.keys()),
+            },
+        )
+        return updated
 
     def delete(self, repuesto_id: int):
         item = self.get(repuesto_id)
         self.repository.delete(item)
+        publish_domain_event(
+            topic_suffix="inventario",
+            event_type="repuesto_eliminado",
+            payload={"repuesto_id": repuesto_id},
+        )
 
     def create_movement(self, payload: dict):
         item = self.get(payload["repuesto_id"])
@@ -46,7 +71,19 @@ class InventarioService:
 
         self.repository.update(item, {"stock_actual": item.stock_actual})
         payload["tipo_movimiento"] = movement_type
-        return self.repository.create_movement(payload)
+        movement = self.repository.create_movement(payload)
+        publish_domain_event(
+            topic_suffix="inventario",
+            event_type="movimiento_inventario_creado",
+            payload={
+                "movimiento_id": movement.id,
+                "repuesto_id": movement.repuesto_id,
+                "tipo_movimiento": movement.tipo_movimiento,
+                "cantidad": movement.cantidad,
+                "stock_actual": item.stock_actual,
+            },
+        )
+        return movement
 
     def list_movements(self):
         return self.repository.list_movements()

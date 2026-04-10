@@ -17,19 +17,19 @@ from app.services.inventario_service import InventarioService
 router = APIRouter()
 
 
-@router.get("", response_model=list[InventarioResponse])
+@router.get("", response_model=list[InventarioResponse], dependencies=[Depends(require_roles("admin", "almacen"))])
 def list_inventario(db: DbSession):
     service = InventarioService(InventarioRepository(db))
     return service.list()
 
 
-@router.get("/movimientos", response_model=list[MovimientoResponse])
+@router.get("/movimientos", response_model=list[MovimientoResponse], dependencies=[Depends(require_roles("admin", "almacen"))])
 def list_movimientos(db: DbSession):
     service = InventarioService(InventarioRepository(db))
     return service.list_movements()
 
 
-@router.get("/alertas", response_model=list[dict[str, Any]])
+@router.get("/alertas", response_model=list[dict[str, Any]], dependencies=[Depends(require_roles("admin", "almacen"))])
 def alertas_stock(db: DbSession):
     service = InventarioService(InventarioRepository(db))
     return service.list_alertas_stock()

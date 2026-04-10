@@ -11,13 +11,13 @@ from app.services.clientes_service import ClientesService
 router = APIRouter()
 
 
-@router.get("", response_model=list[ClienteResponse])
+@router.get("", response_model=list[ClienteResponse], dependencies=[Depends(require_roles("admin", "recepcionista"))])
 def list_clientes(db: DbSession):
     service = ClientesService(ClientesRepository(db))
     return service.list()
 
 
-@router.get("/{cliente_id}", response_model=ClienteResponse)
+@router.get("/{cliente_id}", response_model=ClienteResponse, dependencies=[Depends(require_roles("admin", "recepcionista"))])
 def get_cliente(cliente_id: UUID, db: DbSession):
     service = ClientesService(ClientesRepository(db))
     return service.get(cliente_id)

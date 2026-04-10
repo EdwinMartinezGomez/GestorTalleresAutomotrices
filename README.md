@@ -16,6 +16,7 @@ Incluye autenticacion con Keycloak usando access token y validacion de roles.
 - SQLAlchemy
 - PostgreSQL
 - Keycloak (OIDC)
+- Kafka
 
 ## Estructura
 
@@ -62,6 +63,34 @@ Variables necesarias:
 - KEYCLOAK_CLIENT_SECRET
 - KEYCLOAK_AUDIENCE (opcional)
 
+## Kafka
+
+Variables recomendadas para .env:
+
+- KAFKA_ENABLED=true
+- KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+- KAFKA_CLIENT_ID=gestor-talleres-api
+- KAFKA_TOPIC_PREFIX=talleres
+- KAFKA_METRICS_ENABLED=true
+- KAFKA_METRICS_CONSUMER_GROUP=gestor-talleres-metricas
+- KAFKA_AUTO_OFFSET_RESET=latest
+
+Levantar Kafka local:
+
+	docker compose up -d
+
+Los eventos se publican automaticamente en:
+
+- talleres.auth
+- talleres.clientes
+- talleres.inventario
+- talleres.ordenes
+- talleres.pagos
+
+Consulta de metricas agregadas por consumidor Kafka:
+
+- GET /reportes/kafka-metricas
+
 ## Flujo de autenticacion
 
 1. POST /auth/login con username y password
@@ -69,14 +98,14 @@ Variables necesarias:
 3. Enviar Authorization: Bearer <token> en todas las rutas protegidas
 4. El middleware valida token y roles
 
-## Roles sugeridos
+## Roles y permisos
 
-- admin
-- recepcionista
-- mecanico
-- almacen
-- cajero
-- gerencia
+- admin: acceso total al sistema.
+- recepcionista: registrar y actualizar clientes y vehiculos.
+- mecanico: gestionar ordenes de trabajo e historial.
+- almacen: gestionar inventario y movimientos de stock.
+- cajero: registrar y consultar pagos.
+- gerencia: acceso a reportes y resumenes del negocio.
 
 ## Endpoints principales
 

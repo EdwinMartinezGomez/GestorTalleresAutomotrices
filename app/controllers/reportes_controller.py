@@ -3,6 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Depends
 
 from app.api.deps import DbSession
+from app.core.kafka_metrics import kafka_metrics_consumer
 from app.core.security import require_roles
 from app.repositories.inventario_repository import InventarioRepository
 from app.repositories.ordenes_repository import OrdenesRepository
@@ -30,3 +31,8 @@ def reporte_alertas_stock(db: DbSession):
 def reporte_ordenes(db: DbSession):
     service = OrdenesService(OrdenesRepository(db))
     return service.list_resumen()
+
+
+@router.get("/kafka-metricas", response_model=dict[str, Any])
+def reporte_kafka_metricas():
+    return kafka_metrics_consumer.snapshot()

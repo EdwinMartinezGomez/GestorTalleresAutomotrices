@@ -11,7 +11,7 @@ from app.services.historial_service import HistorialService
 router = APIRouter()
 
 
-@router.get("", response_model=list[HistorialResponse])
+@router.get("", response_model=list[HistorialResponse], dependencies=[Depends(require_roles("admin", "mecanico"))])
 def list_historial(db: DbSession):
     service = HistorialService(HistorialRepository(db))
     return service.list()
@@ -23,7 +23,7 @@ def create_historial(payload: HistorialCreate, db: DbSession):
     return service.create(payload.model_dump())
 
 
-@router.get("/vehiculo-completo", response_model=list[dict[str, Any]])
+@router.get("/vehiculo-completo", response_model=list[dict[str, Any]], dependencies=[Depends(require_roles("admin", "mecanico"))])
 def historial_completo(db: DbSession):
     service = HistorialService(HistorialRepository(db))
     return service.list_historial_completo()

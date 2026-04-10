@@ -11,13 +11,13 @@ from app.services.ordenes_service import OrdenesService
 router = APIRouter()
 
 
-@router.get("", response_model=list[OrdenResponse])
+@router.get("", response_model=list[OrdenResponse], dependencies=[Depends(require_roles("admin", "mecanico"))])
 def list_ordenes(db: DbSession):
     service = OrdenesService(OrdenesRepository(db))
     return service.list()
 
 
-@router.post("", response_model=OrdenResponse, dependencies=[Depends(require_roles("admin", "recepcionista", "mecanico"))])
+@router.post("", response_model=OrdenResponse, dependencies=[Depends(require_roles("admin", "mecanico"))])
 def create_orden(payload: OrdenCreate, db: DbSession):
     service = OrdenesService(OrdenesRepository(db))
     return service.create(payload.model_dump())
@@ -36,13 +36,13 @@ def add_repuesto(payload: OrdenRepuestoCreate, db: DbSession):
     return service.add_repuesto(payload.model_dump())
 
 
-@router.get("/resumen/estados", response_model=list[dict[str, Any]])
+@router.get("/resumen/estados", response_model=list[dict[str, Any]], dependencies=[Depends(require_roles("admin", "mecanico", "gerencia"))])
 def resumen_estados(db: DbSession):
     service = OrdenesService(OrdenesRepository(db))
     return service.list_resumen()
 
 
-@router.get("/{orden_id}", response_model=OrdenResponse)
+@router.get("/{orden_id}", response_model=OrdenResponse, dependencies=[Depends(require_roles("admin", "mecanico"))])
 def get_orden(orden_id: int, db: DbSession):
     service = OrdenesService(OrdenesRepository(db))
     return service.get(orden_id)

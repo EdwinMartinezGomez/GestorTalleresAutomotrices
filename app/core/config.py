@@ -19,6 +19,14 @@ class Settings(BaseSettings):
     KEYCLOAK_CLIENT_SECRET: str
     KEYCLOAK_AUDIENCE: str | None = None
 
+    KAFKA_ENABLED: bool = False
+    KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
+    KAFKA_CLIENT_ID: str = "gestor-talleres-api"
+    KAFKA_TOPIC_PREFIX: str = "talleres"
+    KAFKA_METRICS_ENABLED: bool = True
+    KAFKA_METRICS_CONSUMER_GROUP: str = "gestor-talleres-metricas"
+    KAFKA_AUTO_OFFSET_RESET: str = "latest"
+
 
 @lru_cache
 def get_settings() -> Settings:
