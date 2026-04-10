@@ -91,6 +91,11 @@ Consulta de metricas agregadas por consumidor Kafka:
 
 - GET /reportes/kafka-metricas
 
+Endpoints estilo Node para pruebas Kafka:
+
+- GET /test-kafka
+- GET /metrics
+
 ## Flujo de autenticacion
 
 1. POST /auth/login con username y password

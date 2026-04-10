@@ -54,6 +54,7 @@ class KafkaMetricsConsumer:
         self._enabled = bool(settings.KAFKA_ENABLED and settings.KAFKA_METRICS_ENABLED and KafkaConsumer is not None)
         self._store = KafkaMetricsStore()
         self._topics = [
+            "seguridad.accesos",
             build_topic_name("auth"),
             build_topic_name("clientes"),
             build_topic_name("inventario"),
@@ -95,7 +96,7 @@ class KafkaMetricsConsumer:
                     for message in records:
                         try:
                             body = message.value if isinstance(message.value, dict) else {}
-                            event_type = str(body.get("event_type", "desconocido"))
+                            event_type = str(body.get("event_type") or body.get("tipo") or "desconocido")
                             self._store.add_event(message.topic, event_type)
                         except Exception:
                             self._store.add_error()

@@ -65,6 +65,22 @@ class KafkaEventPublisher:
         except Exception as exc:
             print(f"Error publicando evento en Kafka ({topic}): {exc}")
 
+    def send_event(self, topic: str, event: dict[str, Any]) -> None:
+        producer = self._get_or_create_producer()
+        if not producer:
+            return
+
+        event_with_timestamp = {
+            **event,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+        try:
+            producer.send(topic, value=event_with_timestamp)
+            producer.flush()
+        except Exception as exc:
+            print(f"Error enviando evento a Kafka ({topic}): {exc}")
+
     def close(self) -> None:
         if self._producer:
             try:
@@ -82,3 +98,7 @@ event_publisher = KafkaEventPublisher()
 def publish_domain_event(topic_suffix: str, event_type: str, payload: dict[str, Any], metadata: dict[str, Any] | None = None) -> None:
     topic_name = build_topic_name(topic_suffix)
     event_publisher.publish(topic_name, event_type=event_type, payload=payload, metadata=metadata)
+
+
+def send_event(topic: str, event: dict[str, Any]) -> None:
+    event_publisher.send_event(topic, event)

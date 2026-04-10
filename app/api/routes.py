@@ -4,6 +4,7 @@ from app.controllers.auth_controller import router as auth_router
 from app.controllers.clientes_controller import router as clientes_router
 from app.controllers.historial_controller import router as historial_router
 from app.controllers.inventario_controller import router as inventario_router
+from app.controllers.kafka_controller import router as kafka_router
 from app.controllers.ordenes_controller import router as ordenes_router
 from app.controllers.pagos_controller import router as pagos_router
 from app.controllers.reportes_controller import router as reportes_router
@@ -18,3 +19,4 @@ api_router.include_router(ordenes_router, prefix="/ordenes", tags=["ordenes"])
 api_router.include_router(pagos_router, prefix="/pagos", tags=["pagos"])
 api_router.include_router(historial_router, prefix="/historial", tags=["historial"])
 api_router.include_router(reportes_router, prefix="/reportes", tags=["reportes"])
+api_router.include_router(kafka_router, tags=["kafka"])
