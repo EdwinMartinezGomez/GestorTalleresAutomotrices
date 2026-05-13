@@ -1,8 +1,9 @@
 import uuid
+from typing import Any
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import DateTime, ForeignKey, Integer, Numeric, String, Text, func
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, Numeric, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -18,6 +19,8 @@ class Cliente(Base):
     telefono: Mapped[str | None] = mapped_column(String(15))
     correo: Mapped[str | None] = mapped_column(String(100))
     direccion: Mapped[str | None] = mapped_column(Text)
+    comuna: Mapped[str | None] = mapped_column(String(100))
+    ciudad: Mapped[str | None] = mapped_column(String(100))
     fecha_registro: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
@@ -28,6 +31,10 @@ class Vehiculo(Base):
     marca: Mapped[str] = mapped_column(String(50), nullable=False)
     modelo: Mapped[str | None] = mapped_column(String(50))
     color: Mapped[str | None] = mapped_column(String(30))
+    ano: Mapped[int | None] = mapped_column(Integer)
+    tipo: Mapped[str | None] = mapped_column(String(30))
+    vin: Mapped[str | None] = mapped_column(String(50))
+    km: Mapped[int | None] = mapped_column(Integer)
     cliente_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("clientes.id", ondelete="CASCADE"), nullable=False)
 
 
@@ -36,8 +43,13 @@ class Inventario(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     nombre_repuesto: Mapped[str] = mapped_column(String(100), nullable=False)
+    sku: Mapped[str | None] = mapped_column(String(50))
+    categoria: Mapped[str | None] = mapped_column(String(80))
+    ubicacion: Mapped[str | None] = mapped_column(String(50))
     stock_actual: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     stock_minimo: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    stock_maximo: Mapped[int | None] = mapped_column(Integer)
+    precio_compra: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     precio_venta: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     proveedor: Mapped[str | None] = mapped_column(String(100))
 
@@ -60,6 +72,22 @@ class Orden(Base):
     diagnostico: Mapped[str | None] = mapped_column(Text)
     trabajo_realizado: Mapped[str | None] = mapped_column(Text)
     estado: Mapped[str] = mapped_column(String(20), nullable=False, default="Diagnostico")
+    numero: Mapped[str | None] = mapped_column(String(20))
+    tipo_servicio: Mapped[str | None] = mapped_column(String(20))
+    descripcion: Mapped[str | None] = mapped_column(Text)
+    prioridad: Mapped[str | None] = mapped_column(String(20))
+    lineas: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    inventario_vehiculo: Mapped[dict[str, bool]] = mapped_column(JSON, default=dict)
+    kilometraje: Mapped[int | None] = mapped_column(Integer)
+    nivel_combustible: Mapped[int | None] = mapped_column(Integer)
+    estado_vehiculo: Mapped[str | None] = mapped_column(Text)
+    notas: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    tareas: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
+    subtotal: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    descuento: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    iva: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    total: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    tecnico_asignado: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     mecanico_asignado: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
     fecha_ingreso: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     fecha_entrega: Mapped[datetime | None] = mapped_column(DateTime)
@@ -81,6 +109,7 @@ class Pago(Base):
     orden_id: Mapped[int] = mapped_column(ForeignKey("ordenes.id"), nullable=False)
     monto_total: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     metodo_pago: Mapped[str | None] = mapped_column(String(50))
+    referencia: Mapped[str | None] = mapped_column(String(50))
     fecha_pago: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
