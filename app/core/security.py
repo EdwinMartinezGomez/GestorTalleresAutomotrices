@@ -1,6 +1,7 @@
 from collections.abc import Callable
 import asyncio
 from typing import Any
+from urllib.parse import urlparse, urlunparse
 
 import httpx
 from fastapi import HTTPException, Request, status
@@ -13,10 +14,19 @@ from app.core.config import get_settings
 settings = get_settings()
 
 
+def _normalize_keycloak_server_url(raw_url: str) -> str:
+    parsed = urlparse(raw_url.rstrip("/"))
+    path = parsed.path.rstrip("/")
+    if not path:
+        path = "/auth"
+    return urlunparse(parsed._replace(path=path)).rstrip("/")
+
+
 class KeycloakOIDC:
     def __init__(self) -> None:
+        server_url = _normalize_keycloak_server_url(settings.KEYCLOAK_SERVER_URL)
         self.client = KeycloakOpenID(
-            server_url=settings.KEYCLOAK_SERVER_URL.rstrip("/") + "/",
+            server_url=server_url.rstrip("/") + "/",
             client_id=settings.KEYCLOAK_CLIENT_ID,
             realm_name=settings.KEYCLOAK_REALM,
             client_secret_key=settings.KEYCLOAK_CLIENT_SECRET,
@@ -25,7 +35,8 @@ class KeycloakOIDC:
         self.token_endpoint: str | None = None
 
     async def discover(self) -> None:
-        url = f"{settings.KEYCLOAK_SERVER_URL.rstrip('/')}" \
+        server_url = _normalize_keycloak_server_url(settings.KEYCLOAK_SERVER_URL)
+        url = f"{server_url.rstrip('/')}" \
               f"/realms/{settings.KEYCLOAK_REALM}/.well-known/openid-configuration"
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.get(url)

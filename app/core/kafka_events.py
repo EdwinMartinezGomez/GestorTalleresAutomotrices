@@ -50,7 +50,7 @@ class KafkaEventPublisher:
     def publish(self, topic: str, event_type: str, payload: dict[str, Any], metadata: dict[str, Any] | None = None) -> None:
         producer = self._get_or_create_producer()
         if not producer:
-            return
+            raise RuntimeError("Kafka producer no disponible")
 
         event = {
             "event_type": event_type,
@@ -60,15 +60,17 @@ class KafkaEventPublisher:
         }
 
         try:
-            producer.send(topic, value=event)
+            future = producer.send(topic, value=event)
+            future.get(timeout=10)
             producer.flush()
         except Exception as exc:
             print(f"Error publicando evento en Kafka ({topic}): {exc}")
+            raise
 
     def send_event(self, topic: str, event: dict[str, Any]) -> None:
         producer = self._get_or_create_producer()
         if not producer:
-            return
+            raise RuntimeError("Kafka producer no disponible")
 
         event_with_timestamp = {
             **event,
@@ -76,10 +78,12 @@ class KafkaEventPublisher:
         }
 
         try:
-            producer.send(topic, value=event_with_timestamp)
+            future = producer.send(topic, value=event_with_timestamp)
+            future.get(timeout=10)
             producer.flush()
         except Exception as exc:
             print(f"Error enviando evento a Kafka ({topic}): {exc}")
+            raise
 
     def close(self) -> None:
         if self._producer:

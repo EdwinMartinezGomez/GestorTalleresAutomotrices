@@ -18,11 +18,11 @@ router = APIRouter()
 
 
 def _build_front_cliente(db: Session, cliente: Cliente) -> ClienteFrontendResponse:
-    vehiculos_count = db.query(Vehiculo).filter(Vehiculo.cliente_id == cliente.id).count()
+    vehiculos_count = db.query(Vehiculo).filter(Vehiculo.cliente_documento == cliente.documento).count()
     ultima_orden = (
         db.query(Orden)
         .join(Vehiculo, Vehiculo.placa == Orden.placa_vehiculo)
-        .filter(Vehiculo.cliente_id == cliente.id)
+        .filter(Vehiculo.cliente_documento == cliente.documento)
         .order_by(Orden.fecha_ingreso.desc())
         .first()
     )

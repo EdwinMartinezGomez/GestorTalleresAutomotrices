@@ -1,6 +1,6 @@
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request, status
 
 from app.core.kafka_events import send_event
 from app.core.kafka_metrics import kafka_metrics_consumer
@@ -17,7 +17,13 @@ def test_kafka(request: Request) -> dict[str, Any]:
         "usuario": user.get("preferred_username") or user.get("sub") or "desconocido",
     }
 
-    send_event("seguridad.accesos", test_event)
+    try:
+        send_event("seguridad.accesos", test_event)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"No se pudo enviar el evento a Kafka: {exc}",
+        ) from exc
 
     return {
         "status": "success",

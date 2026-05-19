@@ -35,7 +35,11 @@ class Vehiculo(Base):
     tipo: Mapped[str | None] = mapped_column(String(30))
     vin: Mapped[str | None] = mapped_column(String(50))
     km: Mapped[int | None] = mapped_column(Integer)
-    cliente_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("clientes.id", ondelete="CASCADE"), nullable=False)
+    cliente_documento: Mapped[str | None] = mapped_column(
+        String(20),
+        ForeignKey("clientes.documento", ondelete="CASCADE"),
+        nullable=True,
+    )
 
 
 class Inventario(Base):

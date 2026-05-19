@@ -74,7 +74,7 @@ def _normalize_lineas(lineas: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def _build_front_orden(db: Session, orden: Orden) -> OrdenFrontendResponse:
     vehiculo = db.get(Vehiculo, orden.placa_vehiculo)
-    cliente = db.get(Cliente, vehiculo.cliente_id) if vehiculo else None
+    cliente = db.query(Cliente).filter(Cliente.documento == vehiculo.cliente_documento).first() if vehiculo else None
     lineas = _normalize_lineas(orden.lineas or [])
     totals = _calculate_totals(lineas)
     return OrdenFrontendResponse(

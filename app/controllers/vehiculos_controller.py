@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
@@ -17,8 +15,14 @@ from app.services.vehiculos_service import VehiculosService
 router = APIRouter()
 
 
+def _get_cliente_by_vehiculo(db: Session, vehiculo: Vehiculo) -> Cliente | None:
+    if not vehiculo.cliente_documento:
+        return None
+    return db.query(Cliente).filter(Cliente.documento == vehiculo.cliente_documento).first()
+
+
 def _build_front_vehiculo(db: Session, vehiculo: Vehiculo) -> VehiculoFrontendResponse:
-    cliente = db.get(Cliente, vehiculo.cliente_id)
+    cliente = _get_cliente_by_vehiculo(db, vehiculo)
     return VehiculoFrontendResponse(
         id=vehiculo.placa,
         marca=vehiculo.marca,
@@ -30,15 +34,15 @@ def _build_front_vehiculo(db: Session, vehiculo: Vehiculo) -> VehiculoFrontendRe
         vin=vehiculo.vin,
         km=vehiculo.km,
         cliente=cliente.nombre if cliente else None,
-        clienteId=str(vehiculo.cliente_id),
+        clienteDocumento=vehiculo.cliente_documento,
     )
 
 
-def _parse_uuid(value: str) -> UUID:
-    try:
-        return UUID(value)
-    except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="clienteId invalido") from exc
+def _resolve_cliente_documento(db: Session, cliente_documento: str) -> str:
+    cliente = db.query(Cliente).filter(Cliente.documento == cliente_documento).first()
+    if not cliente:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cliente no encontrado")
+    return cliente.documento
 
 
 @router.get("", response_model=list[VehiculoFrontendResponse], dependencies=[Depends(require_roles("admin", "recepcionista"))])
@@ -58,7 +62,7 @@ def get_vehiculo(placa: str, db: DbSession):
 @router.post("", response_model=VehiculoFrontendResponse, dependencies=[Depends(require_roles("admin", "recepcionista"))])
 def create_vehiculo(payload: VehiculoFrontendCreate, db: DbSession):
     service = VehiculosService(VehiculosRepository(db))
-    cliente_id = _parse_uuid(payload.clienteId)
+    cliente_documento = _resolve_cliente_documento(db, payload.clienteDocumento)
     vehiculo = service.create(
         {
             "placa": payload.placa,
@@ -69,7 +73,7 @@ def create_vehiculo(payload: VehiculoFrontendCreate, db: DbSession):
             "tipo": payload.tipo,
             "vin": payload.vin,
             "km": payload.km,
-            "cliente_id": cliente_id,
+            "cliente_documento": cliente_documento,
         }
     )
     return _build_front_vehiculo(db, vehiculo)
@@ -93,8 +97,8 @@ def update_vehiculo(placa: str, payload: VehiculoFrontendUpdate, db: DbSession):
         updates["vin"] = payload.vin
     if payload.km is not None:
         updates["km"] = payload.km
-    if payload.clienteId is not None:
-        updates["cliente_id"] = _parse_uuid(payload.clienteId)
+    if payload.clienteDocumento is not None:
+        updates["cliente_documento"] = _resolve_cliente_documento(db, payload.clienteDocumento)
     vehiculo = service.update(placa, updates)
     return _build_front_vehiculo(db, vehiculo)
 

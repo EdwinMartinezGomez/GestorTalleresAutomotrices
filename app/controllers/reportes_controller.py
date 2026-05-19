@@ -114,7 +114,7 @@ def dashboard(db: DbSession):
         cliente_nombre = ""
         vehiculo = db.get(Vehiculo, orden.placa_vehiculo)
         if vehiculo:
-            cliente = db.get(Cliente, vehiculo.cliente_id)
+            cliente = db.query(Cliente).filter(Cliente.documento == vehiculo.cliente_documento).first()
             if cliente:
                 cliente_nombre = cliente.nombre
         recientes.append(
