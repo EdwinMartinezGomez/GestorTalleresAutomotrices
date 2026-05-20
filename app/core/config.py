@@ -13,6 +13,10 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str
 
+    REDIS_URL: str = "redis://10.200.2.253:6379/0"
+    CACHE_ENABLED: bool = True
+    CACHE_DEFAULT_TTL: int = 60
+
     KEYCLOAK_SERVER_URL: str
     KEYCLOAK_REALM: str
     KEYCLOAK_CLIENT_ID: str
@@ -20,7 +24,7 @@ class Settings(BaseSettings):
     KEYCLOAK_AUDIENCE: str | None = None
 
     KAFKA_ENABLED: bool = False
-    KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
+    KAFKA_BOOTSTRAP_SERVERS: str = "10.200.2.253:9092"
     KAFKA_CLIENT_ID: str = "gestor-talleres-api"
     KAFKA_TOPIC_PREFIX: str = "talleres"
     KAFKA_METRICS_ENABLED: bool = True

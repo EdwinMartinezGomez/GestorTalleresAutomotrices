@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import DbSession
+from app.core.cache import cache_store
 from app.core.security import require_roles
 from app.entities.models import Cliente, Orden, Vehiculo
 from app.repositories.clientes_repository import ClientesRepository
@@ -46,8 +47,12 @@ def _build_front_cliente(db: Session, cliente: Cliente) -> ClienteFrontendRespon
 @router.get("", response_model=list[ClienteFrontendResponse], dependencies=[Depends(require_roles("admin", "recepcionista"))])
 def list_clientes(db: DbSession):
     service = ClientesService(ClientesRepository(db))
-    clientes = service.list()
-    return [_build_front_cliente(db, cliente) for cliente in clientes]
+    cache_key = "clientes:list"
+    return cache_store.cached(
+        cache_key,
+        lambda: [_build_front_cliente(db, cliente).model_dump() for cliente in service.list()],
+        ttl_seconds=30,
+    )
 
 
 @router.get("/{cliente_id}", response_model=ClienteFrontendResponse, dependencies=[Depends(require_roles("admin", "recepcionista"))])
