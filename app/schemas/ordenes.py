@@ -1,5 +1,4 @@
 from datetime import datetime
-from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -9,7 +8,7 @@ class OrdenBase(BaseModel):
     diagnostico: str | None = None
     trabajo_realizado: str | None = None
     estado: str = "Diagnostico"
-    mecanico_asignado: UUID | None = None
+    mecanico_asignado: int | None = None
     fecha_entrega: datetime | None = None
 
 
@@ -21,7 +20,7 @@ class OrdenUpdate(BaseModel):
     diagnostico: str | None = None
     trabajo_realizado: str | None = None
     estado: str | None = None
-    mecanico_asignado: UUID | None = None
+    mecanico_asignado: int | None = None
     fecha_entrega: datetime | None = None
 
 

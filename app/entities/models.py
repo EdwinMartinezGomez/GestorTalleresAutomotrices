@@ -92,7 +92,7 @@ class Orden(Base):
     iva: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     total: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     tecnico_asignado: Mapped[dict[str, Any] | None] = mapped_column(JSON)
-    mecanico_asignado: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    mecanico_asignado: Mapped[int | None] = mapped_column(Integer)
     fecha_ingreso: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     fecha_entrega: Mapped[datetime | None] = mapped_column(DateTime)
 

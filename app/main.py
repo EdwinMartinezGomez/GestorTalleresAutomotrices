@@ -3,6 +3,7 @@ import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 import uvicorn
@@ -14,7 +15,7 @@ if __package__ is None or __package__ == "":
         sys.path.insert(0, project_root)
 
 from app.api.routes import api_router
-from app.core.database import engine
+from app.core.database import engine, sync_legacy_schema
 from app.core.config import get_settings
 from app.core.kafka_events import event_publisher
 from app.core.kafka_metrics import kafka_metrics_consumer
@@ -28,6 +29,7 @@ settings = get_settings()
 async def lifespan(_: FastAPI):
     # Crea tablas base si no existen (entornos locales sin script SQL).
     Base.metadata.create_all(bind=engine)
+    sync_legacy_schema()
     try:
         await keycloak_oidc.discover()
     except Exception as exc:
@@ -44,6 +46,14 @@ app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 app.add_middleware(
     KeycloakAuthMiddleware,
     exclude_paths={"/health", "/docs", "/docs/oauth2-redirect", "/redoc", "/openapi.json", "/auth/login"},
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 

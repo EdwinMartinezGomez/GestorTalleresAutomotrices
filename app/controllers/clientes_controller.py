@@ -27,7 +27,7 @@ def _build_front_cliente(db: Session, cliente: Cliente) -> ClienteFrontendRespon
         .first()
     )
     ultima_visita = ultima_orden.fecha_ingreso.isoformat() if ultima_orden else None
-    estado_orden = ultima_orden.estado if ultima_orden else None
+    estado_orden = ultima_orden.estado if ultima_orden and ultima_orden.estado else "Sin orden"
     return ClienteFrontendResponse(
         id=str(cliente.id),
         nombre=cliente.nombre,
