@@ -27,9 +27,10 @@ settings = get_settings()
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    # Crea tablas base si no existen (entornos locales sin script SQL).
-    Base.metadata.create_all(bind=engine)
-    sync_legacy_schema()
+    if settings.APP_ENV.lower() == "development":
+        # Crea tablas base si no existen (entornos locales sin script SQL).
+        Base.metadata.create_all(bind=engine)
+        sync_legacy_schema()
     try:
         await keycloak_oidc.discover()
     except Exception as exc:
