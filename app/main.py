@@ -29,8 +29,11 @@ settings = get_settings()
 async def lifespan(_: FastAPI):
     if settings.APP_ENV.lower() == "development":
         # Crea tablas base si no existen (entornos locales sin script SQL).
-        Base.metadata.create_all(bind=engine)
-        sync_legacy_schema()
+        try:
+            Base.metadata.create_all(bind=engine)
+            sync_legacy_schema()
+        except Exception as exc:
+            print(f"No se pudo crear/sincronizar esquema al iniciar: {exc}")
     try:
         await keycloak_oidc.discover()
     except Exception as exc:
