@@ -118,6 +118,8 @@ class KeycloakAuthMiddleware(BaseHTTPMiddleware):
         self.exclude_paths = exclude_paths or set()
 
     async def dispatch(self, request: Request, call_next):
+        if request.method == "OPTIONS":
+            return await call_next(request)
         if request.url.path in self.exclude_paths:
             return await call_next(request)
 

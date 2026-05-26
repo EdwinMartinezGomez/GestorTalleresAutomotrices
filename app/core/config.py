@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     CACHE_ENABLED: bool = True
     CACHE_DEFAULT_TTL: int = 60
 
+    CORS_ALLOW_ORIGINS: str = "*"
+
     KEYCLOAK_SERVER_URL: str
     KEYCLOAK_REALM: str
     KEYCLOAK_CLIENT_ID: str
