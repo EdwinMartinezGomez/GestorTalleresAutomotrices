@@ -13,7 +13,7 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str
 
-    REDIS_URL: str = "redis://10.200.2.253:6379/0"
+    REDIS_URL: str = "redis://10.254.167.71:6379/0"
     CACHE_ENABLED: bool = True
     CACHE_DEFAULT_TTL: int = 60
 

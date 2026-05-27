@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime, timezone
 from functools import lru_cache
 from typing import Any, Callable, TypeVar
 
@@ -30,6 +31,12 @@ class RedisCache:
                     socket_timeout=1,
                 )
                 self.client.ping()
+                # Marca de conexion para validar que Redis recibe datos.
+                self.client.setex(
+                    "cache:connection",
+                    60,
+                    datetime.now(timezone.utc).isoformat(),
+                )
             except Exception:
                 self.enabled = False
                 self.client = None
